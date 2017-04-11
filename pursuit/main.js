@@ -1,4 +1,5 @@
 let boid;
+let target;
 let allowTargetPlacement = true;
 
 function setup () {
@@ -6,6 +7,16 @@ function setup () {
 
   boid = new Boid(width/2, height/2, 1);
   boid.vel = createVector(random(width), random(height))
+  boid.renderPursuit = true;
+  boid.invertAccel = -1;
+  boid.maxspeed = 7;
+  boid.maxforce = 0.21;
+
+  target = new Boid(50, 50, 2);
+  target.vel = createVector(target.maxspeed, 0);
+  target.circleRadius = 100;
+  target.maxforce = target.maxforce * 4;
+  target.maxspeed *= 4;
 
   renderUI();
 }
@@ -13,11 +24,17 @@ function setup () {
 function draw () {
   background(255);
 
-  const steer = boid.wander();
+  const steer = boid.pursuit(target);
   boid.applyForce(steer);
   boid.update();
-  boid.borders();
+  boid.bounceBorders();
   boid.render();
+
+  const s = target.wander();
+  target.applyForce(s);
+  target.update();
+  target.bounceBorders();
+  target.render();
 }
 
 function windowResized () {
