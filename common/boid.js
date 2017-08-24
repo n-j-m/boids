@@ -25,6 +25,8 @@ class Boid {
     this.renderPursuit = false;
     this.pursuitTime = 5;
     this.futurePos = null;
+
+    this.steering = new SteeringManager(this);
   }
 
   applyForce (force) {
@@ -32,6 +34,7 @@ class Boid {
   }
 
   update () {
+    this.steering.update();
     this.vel.add(this.acc);
     this.vel.limit(this.maxspeed);
     this.pos.add(this.vel);
@@ -157,74 +160,94 @@ class Boid {
   }
 
   bounceBorders () {
-    if (this.pos.x < this.r) this.vel.x *= -1;
-    if (this.pos.y < this.r) this.vel.y *= -1;
-    if (this.pos.x > width-this.r) this.vel.x *= -1;
-    if (this.pos.y > height-this.r) this.vel.y *= -1;
-  }
-
-  seek (target) {
-    const desired = p5.Vector.sub(target, this.pos);
-    desired.setMag(this.maxspeed);
-    const steer = p5.Vector.sub(desired, this.vel);
-    steer.limit(this.maxforce);
-    return steer;
-  }
-
-  arrive (target, slowingRange) {
-    const desired = p5.Vector.sub(target, this.pos);
-    const d = desired.mag();
-    let speed = this.maxspeed;
-    if (d < slowingRange) {
-      speed = this.maxspeed * (d / slowingRange);
+    if (this.pos.x < this.r) {
+      this.pos.x = this.r;
+      this.vel.x *= -1;
     }
-    desired.setMag(speed);
-    const steer = p5.Vector.sub(desired, this.vel);
-    steer.limit(this.maxforce);
-    return steer;
+    if (this.pos.y < this.r) {
+      this.pos.y = this.r;
+      this.vel.y *= -1;
+    }
+    if (this.pos.x > width-this.r) {
+      this.pos.x = width-this.r;
+      this.vel.x *= -1;
+    }
+    if (this.pos.y > height-this.r) {
+      this.pos.y = height-this.r;
+      this.vel.y *= -1;
+    }
   }
 
-  wander () {
-    // calc wander circle
-    this.circleCenter = this.vel.copy()
-      .setMag(this.circleDistance);
+  // seek (target) {
+  //   const desired = p5.Vector.sub(target, this.pos);
+  //   desired.setMag(this.maxspeed);
+  //   const steer = p5.Vector.sub(desired, this.vel);
+  //   steer.limit(this.maxforce);
+  //   return steer;
+  // }
 
-    if (this.renderWander) this.renderWanderCircle();
+  // flee (target) {
+  //   const desired = p5.Vector.sub(this.pos, target);
+  //   desired.setMag(this.maxspeed);
+  //   const steer = p5.Vector.sub(desired, this.vel);
+  //   steer.limit(this.maxforce);
+  //   return steer;
+  // }
 
-    this.displacement = p5.Vector.random2D();
-    this.displacement.setMag(this.circleRadius);
+  // arrive (target, slowingRange) {
+  //   const desired = p5.Vector.sub(target, this.pos);
+  //   const d = desired.mag();
+  //   let speed = this.maxspeed;
+  //   if (d < slowingRange) {
+  //     speed = this.maxspeed * (d / slowingRange);
+  //   }
+  //   desired.setMag(speed);
+  //   const steer = p5.Vector.sub(desired, this.vel);
+  //   steer.limit(this.maxforce);
+  //   return steer;
+  // }
 
-    setAngle(this.displacement, this.wanderAngle);
+  // wander () {
+  //   // calc wander circle
+  //   this.circleCenter = this.vel.copy()
+  //     .setMag(this.circleDistance);
+
+  //   if (this.renderWander) this.renderWanderCircle();
+
+  //   this.displacement = p5.Vector.random2D();
+  //   this.displacement.setMag(this.circleRadius);
+
+  //   setAngle(this.displacement, this.wanderAngle);
     
-    this.wanderAngle += newAngle(this.wanderAngle, this.angleChange);
+  //   this.wanderAngle += newAngle(this.wanderAngle, this.angleChange);
 
-    if (this.renderWander) this.renderDisplacement();
+  //   if (this.renderWander) this.renderDisplacement();
 
-    this.wanderForce = p5.Vector.add(this.circleCenter, this.displacement);
-    if (this.renderWander) this.renderWanderForce();
-    this.wanderForce.limit(this.maxforce);
+  //   this.wanderForce = p5.Vector.add(this.circleCenter, this.displacement);
+  //   if (this.renderWander) this.renderWanderForce();
+  //   this.wanderForce.limit(this.maxforce);
 
 
-    return this.wanderForce;
-  }
+  //   return this.wanderForce;
+  // }
 
-  pursuit (other) {
-    const distance = p5.Vector.sub(this.pos, other.pos);
-    const pTime = distance.mag() / other.maxspeed;
-    const futureVel = p5.Vector.mult(other.vel, pTime);
-    this.futurePos = p5.Vector.add(other.pos, futureVel);
-    if (this.renderPursuit) this.renderFuturePos();
-    this.futurePos = this.seek(this.futurePos);
-    return this.futurePos;
-  }
-}
+  // pursuit (other) {
+  //   const distance = p5.Vector.sub(this.pos, other.pos);
+  //   const pTime = distance.mag() / other.maxspeed;
+  //   const futureVel = p5.Vector.mult(other.vel, pTime);
+  //   this.futurePos = p5.Vector.add(other.pos, futureVel);
+  //   if (this.renderPursuit) this.renderFuturePos();
+  //   this.futurePos = this.seek(this.futurePos);
+  //   return this.futurePos;
+  // }
 
-function newAngle (angle, angleChange) {
-  return (random() * angleChange) - (angleChange * 0.5);
-}
-
-function setAngle (vector, angle) {
-  const len = vector.mag();
-  vector.x = cos(angle) * len;
-  vector.y = sin(angle) * len;
+  // evade (other) {
+  //   const distance = p5.Vector.sub(this.pos, other.pos);
+  //   const pTime = distance.mag() / other.maxspeed;
+  //   const futureVel = p5.Vector.mult(other.vel, pTime);
+  //   this.futurePos = p5.Vector.add(other.pos, futureVel);
+  //   if (this.renderPursuit) this.renderFuturePos();
+  //   this.futurePos = this.flee(this.futurePos).mult(5);
+  //   return this.futurePos;
+  // }
 }
