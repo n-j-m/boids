@@ -1,38 +1,39 @@
-let boid;
-let allowTargetPlacement = true;
+// This is a test
+let boid
+let allowTargetPlacement = true
 
-function setup () {
-  createCanvas(windowWidth, windowHeight);
+function setup() {
+  createCanvas(windowWidth, windowHeight)
 
-  boid = new Boid(width/2, height/2, 1);
+  boid = new Boid(width / 2, height / 2, 1)
   boid.vel = createVector(random(width), random(height))
 
-  renderUI();
+  renderUI()
 }
 
-function draw () {
-  background(255);
+function draw() {
+  background(255)
 
-  const steer = boid.wander();
-  boid.applyForce(steer);
-  boid.update();
-  boid.borders();
-  boid.render();
+  const steer = boid.wander()
+  boid.applyForce(steer)
+  boid.update()
+  boid.borders()
+  boid.render()
 }
 
-function windowResized () {
-  resizeCanvas(windowWidth, windowHeight);
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight)
 }
 
-function mousePressed () {
+function mousePressed() {
   if (allowTargetPlacement) {
   }
 }
 
-function disableTargetPlacement () {
-  allowTargetPlacement = false;
+function disableTargetPlacement() {
+  allowTargetPlacement = false
 }
 
-function enableTargetPlacement () {
-  allowTargetPlacement = true;
+function enableTargetPlacement() {
+  allowTargetPlacement = true
 }
